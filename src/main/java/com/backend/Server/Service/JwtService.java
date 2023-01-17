@@ -104,7 +104,7 @@ public class JwtService {
 	{
 		try {
 			JWT.require(Algorithm.HMAC512(SECRET_KEY)).build().verify(token);
-			 if(true)/*redisUtil.hasKeyBlackList(token))*/ {
+			 if(redisUtil.hasKeyBlackList(token)) {
 				 log.info("This Token is already BlackList ");
 		        	return false;
 		        }
