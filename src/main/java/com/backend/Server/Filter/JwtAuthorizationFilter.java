@@ -37,7 +37,7 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
 		log.info("Authorization Filter Start");
 		
 		try {
-			jwtservice.checkHeaderVaild(request);
+			jwtservice.checkHeaderValid(request);
 			String accessToken = request.getHeader(JwtProperties.HEADER_PREFIX).replace(JwtProperties.TOKEN_PREFIX, "");
 			String refreshToken = request.getHeader(JwtProperties.REFRESH_HEADER_PREFIX).replace(JwtProperties.TOKEN_PREFIX, "");
 			jwtservice.checkTokenValid(refreshToken);

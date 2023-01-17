@@ -3,8 +3,6 @@ package com.backend.Server.Service;
 import java.util.Calendar;
 import java.util.Date;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,18 +12,22 @@ import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.backend.Server.Exception.CustomJwtException;
 import com.backend.Server.Interface.JwtErrorCode;
 import com.backend.Server.Interface.JwtProperties;
+import com.backend.Server.Redis.RedisUtil;
 import com.backend.Server.Repository.User;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Getter
 public class JwtService {
 	private String SECRET_KEY = "JwtSecretValueIsVeryImportantSoThisValueIsVeryLong";
 	private final User user;
+	private final RedisUtil redisUtil;
 	
 	@Transactional(readOnly = true)
 	public com.backend.Server.Entity.User getUserByRefreshToken(String token)
@@ -48,12 +50,25 @@ public class JwtService {
 	public void logout(HttpServletRequest req)
 	{
 		try {
-			checkHeaderVaild(req);
-			String refresh =req.getHeader(JwtProperties.REFRESH_HEADER_PREFIX).replace(JwtProperties.TOKEN_PREFIX, "");
+			checkHeaderValid(req);
+			String refresh = req.getHeader(JwtProperties.REFRESH_HEADER_PREFIX).replace(JwtProperties.TOKEN_PREFIX, "");
+			String access = req.getHeader(JwtProperties.HEADER_PREFIX).replace(JwtProperties.TOKEN_PREFIX, "");
+			
 			removeRefreshToken(refresh);
+			
+			 if (!checkTokenValid(access)) {
+			    	throw new CustomJwtException(JwtErrorCode.JWT_ACCESS_NOT_VALID);
+			    }
+			Long expiration = getExpiration(access);	
+			redisUtil.setBlackList(access, "access_token", expiration);
 		}catch(Exception e) {
 			throw new CustomJwtException(JwtErrorCode.JWT_ACCESS_NOT_VALID);
 		}
+	}
+	
+	public Long getExpiration(String accessToken)
+	{
+		return JWT.decode(accessToken).getExpiresAt().getTime();
 	}
 	
 	public String createAccessToken(int id, String username)
@@ -71,7 +86,7 @@ public class JwtService {
 				.withExpiresAt(new Date(System.currentTimeMillis() + JwtProperties.REFRETSH_EXPIRATION_TIME)).sign(Algorithm.HMAC512(SECRET_KEY));
 	}
 	
-	public void checkHeaderVaild(HttpServletRequest req)
+	public void checkHeaderValid(HttpServletRequest req)
 	{
 		String access = req.getHeader(JwtProperties.HEADER_PREFIX);
 		String refresh = req.getHeader(JwtProperties.REFRESH_HEADER_PREFIX);
@@ -85,9 +100,21 @@ public class JwtService {
 		}
 	}
 	
-	public void checkTokenValid(String token)
+	public boolean checkTokenValid(String token)
 	{
-		JWT.require(Algorithm.HMAC512(SECRET_KEY)).build().verify(token);
+		try {
+			JWT.require(Algorithm.HMAC512(SECRET_KEY)).build().verify(token);
+			 if(true)/*redisUtil.hasKeyBlackList(token))*/ {
+				 log.info("This Token is already BlackList ");
+		        	return false;
+		        }
+		}
+		catch(Exception e)
+		{
+			log.info("Token Valid Exception : " + e.getMessage());
+			return false;
+		}
+		return true;
 	}
 	
 	public boolean IsExpiredToken(String token)
