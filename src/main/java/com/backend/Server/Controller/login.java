@@ -25,6 +25,7 @@ public class login {
 	public String join(@RequestBody User info)
 	{
 		log.info("join");
+		log.info("pw is : " + info.getPassword());
 		info.setPassword(passwordEncoder.encode(info.getPassword()));
 		com.backend.Server.Entity.User user_entity = User.toEntity(info);
 		user.save(user_entity);
