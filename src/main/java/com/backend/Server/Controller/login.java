@@ -22,7 +22,7 @@ public class login {
 	private PasswordEncoder passwordEncoder;
 	
 	@PostMapping("/join")
-	public String join(@RequestBody User info)
+	public String join(@RequestBody com.backend.Server.Dto.User info)
 	{
 		log.info("join");
 		log.info("pw is : " + info.getPassword());
