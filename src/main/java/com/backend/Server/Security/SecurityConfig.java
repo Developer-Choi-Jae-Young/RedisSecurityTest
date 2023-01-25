@@ -1,6 +1,5 @@
 package com.backend.Server.Security;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -11,9 +10,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.filter.CorsFilter;
 
+import com.backend.Server.Filter.CorsConfig;
 import com.backend.Server.Filter.JwtAuthenticationFilter;
 import com.backend.Server.Filter.JwtAuthorizationFilter;
 import com.backend.Server.Repository.User;
@@ -28,8 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SecurityConfig {
 	private final User user;
-	private final JwtService jwt;
-	private final CorsFilter cors;
+	private final JwtService jwt;	
+	private final CorsConfig cors;
 	
 	private static final String[] AUTH_WHITELIST = {
             "/auth/**"
@@ -50,7 +48,7 @@ public class SecurityConfig {
 	                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
 	                .addFilter(new JwtAuthenticationFilter(authenticationManager, jwt))
 	                .addFilter(new JwtAuthorizationFilter(authenticationManager, jwt))
-	                .addFilterBefore(cors, UsernamePasswordAuthenticationFilter.class)
+	                .addFilter(cors.corsFilter())
 	                .build();
 	}
 	
