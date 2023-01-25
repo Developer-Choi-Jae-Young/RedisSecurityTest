@@ -36,7 +36,6 @@ public class SecurityConfig {
 	@Bean
 	protected SecurityFilterChain configure(HttpSecurity http) throws Exception {
 		log.info("security start");
-		
 		AuthenticationManager authenticationManager = authenticationManager(http.getSharedObject(AuthenticationConfiguration.class));
 		 return http
 	                .authorizeHttpRequests(authorize -> authorize
