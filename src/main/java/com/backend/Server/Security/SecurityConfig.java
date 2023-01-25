@@ -11,6 +11,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.filter.CorsFilter;
 
 import com.backend.Server.Filter.JwtAuthenticationFilter;
 import com.backend.Server.Filter.JwtAuthorizationFilter;
@@ -27,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SecurityConfig {
 	private final User user;
 	private final JwtService jwt;
+	private final CorsFilter cors;
 	
 	private static final String[] AUTH_WHITELIST = {
             "/auth/**"
@@ -47,6 +50,7 @@ public class SecurityConfig {
 	                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
 	                .addFilter(new JwtAuthenticationFilter(authenticationManager, jwt))
 	                .addFilter(new JwtAuthorizationFilter(authenticationManager, jwt))
+	                .addFilterBefore(cors, UsernamePasswordAuthenticationFilter.class)
 	                .build();
 	}
 	
